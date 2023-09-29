@@ -30,10 +30,9 @@ def model_inference(model_id: str, images: List[Image.Image], prompt: str, thres
         outputs = model(**inputs)
         preds = outputs.logits
 
-    original_height, original_width = images[0].size
     pred_masks = [(pred.sigmoid().cpu().numpy()*255).astype(np.uint8) for pred in preds]
     pred_masks = [cv2.threshold(mask, threshold, 255, cv2.THRESH_BINARY)[1] for mask in pred_masks]
-    pred_masks = [cv2.resize(mask.copy(), (original_width, original_height), interpolation=cv2.INTER_NEAREST) for mask in pred_masks]
+    pred_masks = [cv2.resize(mask.copy(), (img.size[0], img.size[1]), interpolation=cv2.INTER_NEAREST) for mask, img in zip(pred_masks, images)]
 
     return pred_masks
 
@@ -84,45 +83,45 @@ def main(args: argparse.Namespace) -> None:
     config["is_gpu_available"] = torch.cuda.is_available()
 
 
-    with wandb.init(project="coin-segmentation", tags=["clipseg", "optuna"], config=config):
-        start = time.time()
-        outputs_train = model_inference(config["model_id"], images_train, args.prompt, config["threshold"])
-        end = time.time()
+    # with wandb.init(project="coin-segmentation", tags=["clipseg", "optuna"], config=config):
+    #     start = time.time()
+    #     outputs_train = model_inference(config["model_id"], images_train, args.prompt, config["threshold"])
+    #     end = time.time()
 
-        ious_train = [calculate_iou(mask, pred_mask) for mask, pred_mask in zip(masks_train, outputs_train)]
-        iou_train = np.mean(ious_train)
-        throughput = len(images_train) / (end - start)
-        latency = (end - start) / len(images_train)
+    #     ious_train = [calculate_iou(mask, pred_mask) for mask, pred_mask in zip(masks_train, outputs_train)]
+    #     iou_train = np.mean(ious_train)
+    #     throughput = len(images_train) / (end - start)
+    #     latency = (end - start) / len(images_train)
 
-        outputs_val = model_inference(config["model_id"], images_val, args.prompt, config["threshold"])
-        ious_val = [calculate_iou(mask, pred_mask) for mask, pred_mask in zip(masks_val, outputs_val)]
-        iou_val = np.mean(ious_val)
+    #     outputs_val = model_inference(config["model_id"], images_val, args.prompt, config["threshold"])
+    #     ious_val = [calculate_iou(mask, pred_mask) for mask, pred_mask in zip(masks_val, outputs_val)]
+    #     iou_val = np.mean(ious_val)
 
         
-        wandb.log(
-            {
-                "mIoU-train": iou_train,
-                "mIoU-val": iou_val,
-                "latency": latency, 
-                "throughput": throughput, 
-            }
-        )
+    #     wandb.log(
+    #         {
+    #             "mIoU-train": iou_train,
+    #             "mIoU-val": iou_val,
+    #             "latency": latency, 
+    #             "throughput": throughput, 
+    #         }
+    #     )
 
-        images = images_train + images_val
-        predictions = outputs_train + outputs_val
-        ground_truths = masks_train + masks_val
-        ious = ious_train + ious_val
-        paths = x_train + x_val
+    #     images = images_train + images_val
+    #     predictions = outputs_train + outputs_val
+    #     ground_truths = masks_train + masks_val
+    #     ious = ious_train + ious_val
+    #     paths = x_train + x_val
 
-        data = generate_table_data(images, ground_truths, predictions, ious, paths)
+    #     data = generate_table_data(images, ground_truths, predictions, ious, paths)
 
-        log_table(data)
+    #     log_table(data)
 
 
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Optuna experiment for CLIPSeg")
-    parser.add_argument("--val-size", type=int, default=15, help="Validation split")
+    parser.add_argument("--val-size", type=int, default=140, help="Validation split")
     parser.add_argument("--random-seed", type=int, default=42, help="Random seed")
     parser.add_argument("--prompt", type=str, default="all circle shaped objects that resemble a coin", help="Prompt")
     parser.add_argument("--n-trials", type=int, default=100, help="Number of trials")
