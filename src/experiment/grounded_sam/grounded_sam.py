@@ -45,10 +45,10 @@ def main(args: argparse.Namespace) -> None:
     ground_truths_train = [cv2.imread(mask, cv2.IMREAD_GRAYSCALE) for mask in y_train]
     ground_truths_val = [cv2.imread(mask, cv2.IMREAD_GRAYSCALE) for mask in y_val]
 
-    ious_train = [calculate_iou(mask, pred_mask) for mask, pred_mask in zip(ground_truths_train, pred_masks_train)]
+    ious_train = [calculate_iou(mask.copy(), pred_mask.copy()) for mask, pred_mask in zip(ground_truths_train, pred_masks_train)]
     iou_train = np.mean(ious_train)
 
-    ious_val = [calculate_iou(mask, pred_mask) for mask, pred_mask in zip(ground_truths_val, pred_masks_val)]
+    ious_val = [calculate_iou(mask.copy(), pred_mask.copy()) for mask, pred_mask in zip(ground_truths_val, pred_masks_val)]
     iou_val = np.mean(ious_val)
 
     throughput = len(x_train) / (end - start)
