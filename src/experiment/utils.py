@@ -82,7 +82,6 @@ def log_table(data: List[Dict[str, Any]]) -> None:
         prediction = d["prediction"]
         image = d["image"]
         subset = d["subset"]
-        print(f"{ground_truth.shape=}, {prediction.shape=}")
         img = wandb.Image(
             image,
             masks={
