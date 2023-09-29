@@ -16,7 +16,7 @@ def generate_table_data(image_paths: str, ground_truths: np.ndarray, predictions
     for image_path, ground_truth, prediction, iou in zip(image_paths, ground_truths, predictions, ious):
         d = {}
         d["image"] = cv2.cvtColor(cv2.imread(image_path), cv2.COLOR_BGR2RGB)
-        d["ground_truth"] = ground_truth
+        d["mask"] = ground_truth
         d["prediction"] = prediction
         d["iou"] = iou
         d["id"] = image_path.split("/")[-1].split(".")[0]
