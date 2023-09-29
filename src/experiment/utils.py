@@ -9,6 +9,9 @@ TrainSet = Tuple[List[str], List[str]]
 ValidSet = Tuple[List[str], List[str]]
 
 def get_train_val_split(val_size: int = 20, random_seed: int=42) -> Tuple[TrainSet, ValidSet]:
+    # NOTE this images were removed because they are either completely unrelated to the task or 
+    # they are mislabeled.
+    IGNORE_IMAGES = ["0062", "0063", "0125", "0110"]
     img_path = sorted([f"data/img/{f}" for f in os.listdir('data/img/')])
     mask_path = sorted([f"data/mask/{f}" for f in os.listdir('data/mask/')])
     # Set the random seed to 42 for reproducibility
@@ -25,6 +28,13 @@ def get_train_val_split(val_size: int = 20, random_seed: int=42) -> Tuple[TrainS
     y_train = np.array(mask_path)[train_idx].tolist()
     x_valid = np.array(img_path)[valid_idx].tolist()
     y_valid = np.array(mask_path)[valid_idx].tolist()
+
+    # Removing the images that are wrong
+    x_train = [x for x in x_train if x.split("/")[-1].split(".")[0] not in IGNORE_IMAGES]
+    y_train = [y for y in y_train if y.split("/")[-1].split(".")[0] not in IGNORE_IMAGES]
+    x_valid = [x for x in x_valid if x.split("/")[-1].split(".")[0] not in IGNORE_IMAGES]
+    y_valid = [y for y in y_valid if y.split("/")[-1].split(".")[0] not in IGNORE_IMAGES]
+
 
     return (x_train, y_train), (x_valid, y_valid)
 

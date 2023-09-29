@@ -37,7 +37,7 @@ def objective(trial: optuna.Trial, images: List[str], masks: List[str]) -> float
 
     return iou
 
-def generate_table_data(outputs: List[SegmentationOutput]) -> List[dict]:
+def generate_table_data(outputs: List[SegmentationOutput], subset: str) -> List[dict]:
     data = []
     for output in outputs:
         d = {}
@@ -46,6 +46,7 @@ def generate_table_data(outputs: List[SegmentationOutput]) -> List[dict]:
         d["prediction"] = output.prediction
         d["iou"] = output.iou
         d["id"] = output.image_path.split("/")[-1].split(".")[0]
+        d["subset"] = subset
         data.append(d)
     
     return data
@@ -60,26 +61,33 @@ def main(val_size: int, random_seed: int, n_trials: int) -> None:
     config["random_seed"] = random_seed
     config["n_trials"] = n_trials
 
-    with wandb.init(project="coin-segmentation", tags=["classic-cv", "optuna"], config=config) as run:
-        pipeline = SegmentationPipeline(**config)
-        start = time.time()
-        outputs_train = pipeline.segment(x_train, y_train)
-        end = time.time()
-        iou_train = np.mean([out.iou for out in outputs_train])
-        throughput = len(x_train) / (end - start)
+    pipeline = SegmentationPipeline(**config)
 
-        outputs_val = pipeline.segment(x_valid, y_valid)
-        iou_val = np.mean([out.iou for out in outputs_val])
-            
-        run.log({"latency": end - start, "throughput": throughput, "mIoU-train": iou_train, "mIoU-val": iou_val})
-        data = generate_table_data(outputs_train+outputs_val)
-        log_table(data)
+    start = time.time()
+    outputs_train = pipeline.segment(x_train, y_train)
+    end = time.time()
 
+    iou_train = np.mean([out.iou for out in outputs_train])
+    throughput = len(x_train) / (end - start)
+    latency = (end - start) / len(x_train)
+
+    outputs_val = pipeline.segment(x_valid, y_valid)
+    iou_val = np.mean([out.iou for out in outputs_val])
+
+    if args.wandb:
+        with wandb.init(project="coin-segmentation", tags=["classic-cv", "optuna"], config=config) as run:
+                
+            run.log({"latency": latency, "throughput": throughput, "mIoU-train": iou_train, "mIoU-val": iou_val})
+            data_train = generate_table_data(outputs_train, "train")
+            data_val = generate_table_data(outputs_val, "val")
+            data = data_train + data_val
+            log_table(data)
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="Optuna hyperparameter optimization")
-    parser.add_argument("--val-size", type=int, default=15, help="Validation set size")
+    parser.add_argument("--val-size", type=int, default=20, help="Validation set size")
     parser.add_argument("--random-seed", type=int, default=42, help="Random seed")
     parser.add_argument("--n-trials", type=int, default=300, help="Number of optuna trials")
+    parser.add_argument("--wandb", action="store_true", help="Whether or not to use wandb")
     args = parser.parse_args()
     main(args.val_size, args.random_seed, args.n_trials)
