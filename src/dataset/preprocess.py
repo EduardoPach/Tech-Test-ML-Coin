@@ -20,7 +20,7 @@ def convert_to_binary_mask(mask: Image.Image) -> Image.Image:
 
 def main() -> None:
     """Reformats the raw unzipped dataset into an img/binary mask directory structure."""
-    image_dirs = os.listdir("public_coin_dataset")
+    image_dirs = sorted(os.listdir("public_coin_dataset"))
 
     if not os.path.exists("data"):
         os.mkdir("data")

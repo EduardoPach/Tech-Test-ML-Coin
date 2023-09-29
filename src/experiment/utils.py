@@ -11,7 +11,7 @@ ValidSet = Tuple[List[str], List[str]]
 def get_train_val_split(val_size: int = 20, random_seed: int=42) -> Tuple[TrainSet, ValidSet]:
     # NOTE this images were removed because they are either completely unrelated to the task or 
     # they are mislabeled.
-    IGNORE_IMAGES = ["0062", "0063", "0125", "0110"]
+    IGNORE_IMAGES = ["0017", "0075", "0146", "0135"]
     img_path = sorted([f"data/img/{f}" for f in os.listdir('data/img/')])
     mask_path = sorted([f"data/mask/{f}" for f in os.listdir('data/mask/')])
     # REMOVE IGNORED FILES
@@ -72,7 +72,7 @@ def log_table(data: List[Dict[str, Any]]) -> None:
             - prediction: np.ndarray
             - iou: float
     """
-    table = wandb.Table(columns=['ID', "IoU", "Image"])
+    table = wandb.Table(columns=['ID', "IoU", "Image", "subset"])
     class_labels = {0: "background", 1: "coin"}
 
     for d in data:
@@ -81,6 +81,7 @@ def log_table(data: List[Dict[str, Any]]) -> None:
         ground_truth = d["mask"]
         prediction = d["prediction"]
         image = d["image"]
+        subset = d["subset"]
         img = wandb.Image(
             image,
             masks={
@@ -95,6 +96,6 @@ def log_table(data: List[Dict[str, Any]]) -> None:
             },
         )
         
-        table.add_data(_id, iou, img)
+        table.add_data(_id, iou, img, subset)
 
     wandb.log({"Table" : table})
