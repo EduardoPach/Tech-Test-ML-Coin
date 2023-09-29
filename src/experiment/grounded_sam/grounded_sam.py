@@ -74,7 +74,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description="GroundedSAM")
     parser.add_argument("--val-size", type=int, default=20, help="Validation set size")
     parser.add_argument("--random-seed", type=int, default=42, help="Random seed")
-    parser.add_argument("--prompt", type=str, default="There is a coin in the image", help="Prompt")
+    parser.add_argument("--prompt", type=str, default="all circle shaped objects that resemble a coin", help="Prompt")
     parser.add_argument("--wandb", action="store_true", help="Whether or not to use wandb")
     args = parser.parse_args()
     main(args)
