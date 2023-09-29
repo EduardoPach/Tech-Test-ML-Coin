@@ -83,39 +83,39 @@ def main(args: argparse.Namespace) -> None:
     config["is_gpu_available"] = torch.cuda.is_available()
 
 
-    # with wandb.init(project="coin-segmentation", tags=["clipseg", "optuna"], config=config):
-    #     start = time.time()
-    #     outputs_train = model_inference(config["model_id"], images_train, args.prompt, config["threshold"])
-    #     end = time.time()
+    with wandb.init(project="coin-segmentation", tags=["clipseg", "optuna"], config=config):
+        start = time.time()
+        outputs_train = model_inference(config["model_id"], images_train, args.prompt, config["threshold"])
+        end = time.time()
 
-    #     ious_train = [calculate_iou(mask, pred_mask) for mask, pred_mask in zip(masks_train, outputs_train)]
-    #     iou_train = np.mean(ious_train)
-    #     throughput = len(images_train) / (end - start)
-    #     latency = (end - start) / len(images_train)
+        ious_train = [calculate_iou(mask, pred_mask) for mask, pred_mask in zip(masks_train, outputs_train)]
+        iou_train = np.mean(ious_train)
+        throughput = len(images_train) / (end - start)
+        latency = (end - start) / len(images_train)
 
-    #     outputs_val = model_inference(config["model_id"], images_val, args.prompt, config["threshold"])
-    #     ious_val = [calculate_iou(mask, pred_mask) for mask, pred_mask in zip(masks_val, outputs_val)]
-    #     iou_val = np.mean(ious_val)
+        outputs_val = model_inference(config["model_id"], images_val, args.prompt, config["threshold"])
+        ious_val = [calculate_iou(mask, pred_mask) for mask, pred_mask in zip(masks_val, outputs_val)]
+        iou_val = np.mean(ious_val)
 
         
-    #     wandb.log(
-    #         {
-    #             "mIoU-train": iou_train,
-    #             "mIoU-val": iou_val,
-    #             "latency": latency, 
-    #             "throughput": throughput, 
-    #         }
-    #     )
+        wandb.log(
+            {
+                "mIoU-train": iou_train,
+                "mIoU-val": iou_val,
+                "latency": latency, 
+                "throughput": throughput, 
+            }
+        )
 
-    #     images = images_train + images_val
-    #     predictions = outputs_train + outputs_val
-    #     ground_truths = masks_train + masks_val
-    #     ious = ious_train + ious_val
-    #     paths = x_train + x_val
+        images = images_train + images_val
+        predictions = outputs_train + outputs_val
+        ground_truths = masks_train + masks_val
+        ious = ious_train + ious_val
+        paths = x_train + x_val
 
-    #     data = generate_table_data(images, ground_truths, predictions, ious, paths)
+        data = generate_table_data(images, ground_truths, predictions, ious, paths)
 
-    #     log_table(data)
+        log_table(data)
 
 
 
