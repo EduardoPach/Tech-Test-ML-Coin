@@ -25,22 +25,31 @@ def generate_table_data(image_paths: str, ground_truths: np.ndarray, predictions
     
     return data
 
+def predict(model: GroundedSAM, image_paths: List[str]) -> List[np.ndarray]:
+    pred_masks = []
+    for image_path in image_paths:
+        pred_mask = model.predict(image_path)
+        pred_mask = pred_mask.mask.astype(np.uint8)
+
+        # If GroundedSAM outputs more than one probable mask we take the average
+        # across all masks
+        if len(pred_mask.shape) == 3:
+            pred_mask = pred_mask.mean(axis=0).astype(np.uint8)
+
+        pred_masks.append(pred_mask)
+    
+    return pred_masks
+
 
 def main(args: argparse.Namespace) -> None:
     (x_train, y_train), (x_val, y_val) = get_train_val_split(args.val_size, args.random_seed)
     model = GroundedSAM(ontology=CaptionOntology({args.prompt: "coin"}))
-    pred_masks_train = []
-    pred_masks_val = []
 
     start = time.time()
-    for image in x_train:
-        pred_mask = model.predict(image)
-        pred_masks_train.append(pred_mask.mask.astype(np.uint8))
+    pred_masks_train = predict(model, x_train)
     end = time.time()
 
-    for image in x_val:
-        pred_mask = model.predict(image)
-        pred_masks_val.append(pred_mask.mask.astype(np.uint8))
+    pred_masks_val = predict(model, x_val)
 
     ground_truths_train = [cv2.imread(mask, cv2.IMREAD_GRAYSCALE) for mask in y_train]
     ground_truths_val = [cv2.imread(mask, cv2.IMREAD_GRAYSCALE) for mask in y_val]
