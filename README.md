@@ -31,7 +31,11 @@ Then install the rest of the requirements:
 pip install -r requirements.txt
 ```
 
-Now you're good to go!
+After you setup the environment, you can run the following command to download the dataset:
+
+```bash
+make build-dataset
+```
 
 ## Dataset Profiling
 
